@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require("dotenv")
 const { MongoClient } = require('mongodb');
+const dotenv = require("dotenv")
+
+dotenv.config()
 
 dotenv.config();
 
@@ -39,6 +42,7 @@ app.get('/airports', async (req, res) => {
     const airports = await db.collection(collectionName).find().toArray();
     res.json(airports);
   } catch (err) {
+    console.log(err)
     res.status(500).json({ error: 'Failed to fetch airports' });
   }
 });
