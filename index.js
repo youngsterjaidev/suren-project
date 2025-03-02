@@ -2,6 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
+const dotenv = require("dotenv")
+
+dotenv.config()
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,7 +15,7 @@ app.use(bodyParser.json()); // Parse JSON request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
 // MongoDB connection URI (replace with your MongoDB URI)
-const mongoURI = 'mongodb://localhost:27017';
+const mongoURI = process.env.MONGO_URI;
 const dbName = 'testdb'; // Replace with your database name
 const collectionName = 'airports'; // Replace with your collection name
 
