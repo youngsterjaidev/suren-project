@@ -1,7 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const dotenv = require("dotenv")
 const { MongoClient } = require('mongodb');
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,8 +15,8 @@ app.use(bodyParser.json()); // Parse JSON request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
 // MongoDB connection URI (replace with your MongoDB URI)
-const mongoURI = 'mongodb://localhost:27017';
-const dbName = 'testdb'; // Replace with your database name
+const mongoURI = process.env.MONGO_URI;
+const dbName = 'tripwiser'; // Replace with your database name
 const collectionName = 'airports'; // Replace with your collection name
 
 // Connect to MongoDB
@@ -40,28 +43,35 @@ app.get('/airports', async (req, res) => {
   }
 });
 
-// GET: Fetch airports by city name
+// GET: Fetch airports by city name (ignore whitespace and include airport names)
 app.get('/airports/city/:cityName', async (req, res) => {
-  try {
-    const { cityName } = req.params;
-
-    // Query the database for airports matching the city name (case-insensitive)
-    const airports = await db
-      .collection(collectionName)
-      .find({ city: { $regex: new RegExp(cityName, 'i') } })
-      .toArray();
-
-    if (airports.length === 0) {
-      return res.status(404).json({ error: 'No airports found for the specified city' });
+    try {
+      const { cityName } = req.params;
+  
+      // Remove leading/trailing whitespace and replace multiple spaces with a single space
+      const cleanedCityName = cityName.trim().replace(/\s+/g, ' ');
+  
+      // Query the database for airports matching the cleaned city name (case-insensitive)
+      const airports = await db
+        .collection(collectionName)
+        .find({ city: { $regex: new RegExp(cleanedCityName, 'i') } })
+        .toArray();
+  
+      if (airports.length === 0) {
+        return res.status(404).json({ error: 'No airports found for the specified city' });
+      }
+  
+      // Extract airport names and IATA codes from the results
+      const airportDetails = airports.map((airport) => ({
+        name: airport.name,
+        iataCode: airport.iataCode,
+      }));
+  
+      res.json({ city: cleanedCityName, airports: airportDetails });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch airports by city' });
     }
-
-    // Extract IATA codes from the results
-    const iataCodes = airports.map((airport) => airport.iataCode);
-    res.json({ city: cityName, iataCodes });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch airports by city' });
-  }
-});
+  });
 
 // POST: Add a new airport
 app.post('/airports', async (req, res) => {
