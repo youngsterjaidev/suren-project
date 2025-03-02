@@ -36,6 +36,7 @@ app.get('/airports', async (req, res) => {
     const airports = await db.collection(collectionName).find().toArray();
     res.json(airports);
   } catch (err) {
+    console.log(err)
     res.status(500).json({ error: 'Failed to fetch airports' });
   }
 });
