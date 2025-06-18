@@ -89,6 +89,22 @@ app.post('/airports', async (req, res) => {
   }
 });
 
+// POST: Add a new airport
+app.post('/suggestions', async (req, res) => {
+  try {
+    let collectionName = "suggestions"
+    const { suggestion } = req.body;
+    if (!suggestion) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await db.collection(collectionName).insertOne({ suggestion });
+    res.status(201).json(result.ops[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add suggestion' });
+  }
+});
+
 // PUT: Update an airport by IATA code
 app.put('/airports/:iataCode', async (req, res) => {
   try {
